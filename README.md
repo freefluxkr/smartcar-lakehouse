@@ -11,7 +11,17 @@
 
 > 🔒 **[저작권 및 도서 이용 안내]**  
 > 본 공개 저장소는 독자의 원활한 실습을 위한 **데이터셋(`data/`)** 및 **도커/파이썬 실행 스크립트**만을 제공합니다.  
-> 14개 정규 챕터의 상세 해설, 비유, 아키텍처 원리, 트러블슈팅 가이드 등 도서의 모든 본문 저작물은 **위키독스(Wikidocs) 공식 출판 페이지**를 통해서만 정식 서비스됩니다.
+> 14개 정규 챕터의 상세 해설, 비유, 아키텍처 원리, 트러블슈팅 가이드 등 도서의 모든 본문 저작물은 **[위키독스 공식 도서(Book 22015)](https://wikidocs.net/book/22015)**를 통해서만 정식 서비스됩니다.
+
+---
+
+> ### 🎮 [DMDG 시그니처] 1초 실행 실시간 웹 인터랙티브 시뮬레이터 탑재
+> 
+> 복잡한 환경을 설치하기 전, 10대 자율주행 차량의 센서 스트림, 카프카 브로커, HDFS 128MB 블록 3벌 복제, Hive SQL 쿼리, 딥러닝 사고 예측을 웹 브라우저에서 1초 만에 직접 조작해 보세요!
+> 
+> [![🚗 자율주행 레이크하우스 실시간 웹 시뮬레이터 실행하기](https://img.shields.io/badge/🚗%20자율주행%20레이크하우스-실시간%20웹%20시뮬레이터%20(클릭)-00f2fe?style=for-the-badge&logoColor=000)](https://htmlpreview.github.io/?https://github.com/freefluxkr/smartcar-lakehouse/blob/main/sim_autonomous_car_lakehouse.html) &nbsp; [![📖 위키독스 정규 도서 바로가기](https://img.shields.io/badge/📖%20위키독스-공식%20도서%20(Book%2022015)-f59e0b?style=for-the-badge)](https://wikidocs.net/book/22015)
+> 
+> *(로컬 저장소의 `sim_autonomous_car_lakehouse.html` 파일을 더블 클릭하여 크롬 브라우저로도 즉시 오프라인 구동 가능합니다.)*
 
 ---
 
