@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "smartcar-lakehouse"
+version = "1.0.0"
+description = "Connected Car & SDV Big Data Lakehouse End-to-End Hands-on Kit"
+authors = ["DMDG 출판부 <dmdg@dmdg.live>"]
+readme = "README.md"
+packages = [{include = "smartcar_lakehouse"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pyhive = "^0.7.0"
+thrift = "^0.16.0"
+sasl = {version = "^0.3.1", optional = true}
+thrift-sasl = "^0.4.3"
+kafka-python = "^2.0.2"
+pandas = "^2.2.0"
+numpy = "^1.26.0"
+scikit-learn = "^1.4.0"
+statsmodels = "^0.14.0"
+seaborn = "^0.13.0"
+matplotlib = "^3.8.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
