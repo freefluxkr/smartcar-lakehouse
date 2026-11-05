@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚗 자율주행 AI 자동차 빅데이터 레이크하우스 실시간 웹 시뮬레이터</title>
+  <style>
+    :root {
+      --bg-dark: #0a0f1d;
+      --card-bg: rgba(16, 24, 48, 0.75);
+      --card-border: rgba(56, 189, 248, 0.2);
+      --neon-cyan: #00f2fe;
+      --neon-blue: #38bdf8;
+      --neon-gold: #f59e0b;
+      --neon-emerald: #10b981;
+      --neon-purple: #a855f7;
+      --neon-rose: #f43f5e;
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif; }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 상단 네온 헤더 바 */
+    header {
+      background: rgba(10, 15, 29, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 4px 20px rgba(0, 242, 254, 0.08);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-icon {
+      font-size: 26px;
+      filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.6));
+    }
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #00f2fe 0%, #38bdf8 50%, #fff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .brand-badge {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      background: rgba(0, 242, 254, 0.15);
+      border: 1px solid var(--neon-cyan);
+      color: var(--neon-cyan);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* 프리셋 시나리오 바 */
+    .preset-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .preset-btn {
+      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .preset-btn:hover {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 242, 254, 0.15);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 10px rgba(0, 242, 254, 0.25);
+    }
+    .preset-btn.active {
+      border-color: var(--neon-cyan);
+      background: linear-gradient(135deg, rgba(0, 242, 254, 0.25), rgba(56, 189, 248, 0.1));
+      color: var(--neon-cyan);
+      box-shadow: 0 0 12px rgba(0, 242, 254, 0.35);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .cluster-status {
+      display: flex;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .status-chip {
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--neon-emerald);
+      color: var(--neon-emerald);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--neon-emerald);
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.4; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); filter: drop-shadow(0 0 4px var(--neon-emerald)); }
+      100% { opacity: 0.4; transform: scale(0.9); }
+    }
+
+    .help-btn {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #000;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+    .help-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.5);
+    }
+
+    /* 메인 3단 레이아웃 */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 340px 1fr 380px;
+      gap: 16px;
+      padding: 16px;
+      height: calc(100vh - 65px);
+      overflow: hidden;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    /* 글래스모피즘 카드 공통 */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      transition: border-color 0.2s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(0, 242, 254, 0.4);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-muted);
+    }
+
+    /* 1단: 센서 & 카프카 */
+    .car-selector {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .car-btn {
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .car-btn.active {
+      background: var(--neon-blue);
+      color: #000;
+      border-color: var(--neon-blue);
+      font-weight: 700;
+    }
+
+    .gauge-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .gauge-box {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .gauge-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-top: 2px;
+    }
+    .gauge-label {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* 터미널 로그 스트림 */
+    .stream-console {
+      background: #050811;
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      border-radius: 8px;
+      padding: 8px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 10px;
+      line-height: 1.5;
+      height: 160px;
+      overflow-y: auto;
+      color: #38bdf8;
+    }
+    .stream-line {
+      margin-bottom: 4px;
+      word-break: break-all;
+    }
+    .stream-time { color: #64748b; }
+    .stream-topic { color: #f59e0b; font-weight: 600; }
+    .stream-car { color: #10b981; font-weight: 700; }
+
+    /* 2단: 서울 도심 맵 & 3D 뷰 */
+    .map-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    #cityCanvas {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 50% 50%, #0d172e 0%, #070b16 100%);
+      border-radius: 10px;
+      display: block;
+    }
+    .map-overlay {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+    .kpi-deck {
+      display: flex;
+      gap: 10px;
+      pointer-events: auto;
+    }
+    .kpi-card {
+      background: rgba(10, 15, 29, 0.85);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+    .kpi-card .val { font-size: 15px; font-weight: 800; color: var(--neon-cyan); }
+    .kpi-card .lbl { font-size: 9px; color: var(--text-muted); }
+
+    .warning-banner {
+      background: rgba(244, 63, 94, 0.2);
+      border: 1px solid var(--neon-rose);
+      color: #fda4af;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      display: none;
+      align-items: center;
+      gap: 6px;
+      pointer-events: auto;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* 하둡 HDFS 블록 시각화 */
+    .hdfs-visualizer {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .hdfs-node {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+    }
+    .hdfs-node-title { font-size: 10px; font-weight: 700; color: var(--neon-gold); }
+    .block-bar {
+      height: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      margin-top: 4px;
+      overflow: hidden;
+      display: flex;
+    }
+    .block-chunk {
+      height: 100%;
+      background: linear-gradient(90deg, var(--neon-cyan), var(--neon-blue));
+      transition: width 0.3s ease;
+    }
+
+    /* 3단: Hive SQL & AI 인공지능 */
+    .sql-console {
+      background: #050811;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
+    }
+    .sql-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #f59e0b;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      resize: none;
+      height: 50px;
+    }
+    .btn-run-sql {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-run-sql:hover { filter: brightness(1.15); }
+
+    .query-result-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10px;
+      margin-top: 8px;
+      max-height: 120px;
+      overflow-y: auto;
+      display: block;
+    }
+    .query-result-table th, .query-result-table td {
+      padding: 4px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: left;
+    }
+    .query-result-table th { color: var(--neon-cyan); background: rgba(0, 242, 254, 0.08); }
+
+    /* AI 신경망 예측기 */
+    .ai-predict-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .slider-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+    }
+    .slider-row input[type="range"] {
+      width: 130px;
+      accent-color: var(--neon-cyan);
+    }
+
+    .prediction-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .prob-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 10px;
+    }
+    .prob-track {
+      flex: 1;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      margin: 0 8px;
+      overflow: hidden;
+    }
+    .prob-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+    .prob-fill.front { background: var(--neon-rose); }
+    .prob-fill.side { background: var(--neon-gold); }
+    .prob-fill.rear { background: var(--neon-emerald); }
+
+    /* 온보딩 모달 (Rule 14 준수) */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(5, 8, 17, 0.75);
+      backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-card {
+      background: #0f172a;
+      border: 1px solid var(--neon-cyan);
+      box-shadow: 0 0 40px rgba(0, 242, 254, 0.35);
+      width: 90%;
+      max-width: 640px;
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--neon-cyan);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .close-x {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .modal-section {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+    .modal-section h4 {
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .step-box {
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 14px;
+      margin-top: 4px;
+    }
+    .no-show-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .start-btn {
+      background: linear-gradient(135deg, #00f2fe 0%, #0284c7 100%);
+      color: #000;
+      font-weight: 800;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
+      transition: transform 0.2s;
+    }
+    .start-btn:hover { transform: scale(1.03); }
+
+    /* 토스트 알림 피드백 (Zero-Dead-Click 원칙) */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--neon-cyan);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. 최상단 네온 헤더 바 -->
+  <header>
+    <div class="brand">
+      <span class="brand-icon">🚗</span>
+      <div>
+        <div class="brand-title">자율주행 AI 자동차 빅데이터 레이크하우스 시뮬레이터</div>
+      </div>
+      <span class="brand-badge">2026 Live Twin</span>
+    </div>
+
+    <!-- 원클릭 프리셋 시나리오 바 -->
+    <div class="preset-bar">
+      <button class="preset-btn active" onclick="applyPreset('normal', this)">
+        <span>🚦</span> 도심 순항 (Normal)
+      </button>
+      <button class="preset-btn" onclick="applyPreset('highway', this)">
+        <span>⚡</span> 고속도로 과속 (Speeding)
+      </button>
+      <button class="preset-btn" onclick="applyPreset('rainy', this)">
+        <span>🌧️</span> 악천후 야간 (Rainy Night)
+      </button>
+      <button class="preset-btn" onclick="applyPreset('incident', this)">
+        <span>🚨</span> 긴급 제동 회피 (Swerve)
+      </button>
+    </div>
+
+    <!-- 우측 상태 뱃지 & 사용 안내 버튼 -->
+    <div class="header-actions">
+      <div class="cluster-status">
+        <div class="status-chip"><div class="pulse-dot"></div> Kafka 9092</div>
+        <div class="status-chip"><div class="pulse-dot"></div> HDFS 8020</div>
+        <div class="status-chip"><div class="pulse-dot"></div> Hive 10000</div>
+      </div>
+      <button class="help-btn" onclick="openModal()">
+        <span>📖</span> 사용 안내
+      </button>
+    </div>
+  </header>
+
+  <!-- 2. 메인 3단 인터랙티브 작업공간 -->
+  <main>
+    <!-- [좌측 1단] 차량 센서 시뮬레이터 & 카프카 실시간 스트림 -->
+    <div class="col">
+      <!-- 텔레메트리 센서 박스 -->
+      <div class="glass-card">
+        <div class="card-title">
+          <span>🚗 자율주행 차량 센서 제어</span>
+          <span class="card-tag">CAN-Bus v2</span>
+        </div>
+
+        <div class="car-selector" id="carSelector">
+          <!-- 10대 차량 버튼 동적 생성 -->
+        </div>
+
+        <div class="gauge-grid">
+          <div class="gauge-box">
+            <div class="gauge-label">실시간 속도</div>
+            <div class="gauge-val" id="valSpeed">65.2 <span style="font-size:11px;font-weight:400;">km/h</span></div>
+          </div>
+          <div class="gauge-box">
+            <div class="gauge-label">엔진/모터 RPM</div>
+            <div class="gauge-val" id="valRpm">2,140</div>
+          </div>
+          <div class="gauge-box">
+            <div class="gauge-label">핸들 조향각</div>
+            <div class="gauge-val" id="valSteer">-2.4°</div>
+          </div>
+          <div class="gauge-box">
+            <div class="gauge-label">브레이크 감압</div>
+            <div class="gauge-val" id="valBrake" style="color:var(--neon-emerald);">OFF (0%)</div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px;">
+          <button class="preset-btn" style="flex:1; justify-content:center;" onclick="toggleAutoDrive()">
+            <span id="autoDriveIcon">⏸️</span> <span id="autoDriveTxt">시뮬레이션 일시정지</span>
+          </button>
+          <button class="preset-btn" style="width:90px; justify-content:center; border-color:var(--neon-rose); color:#fda4af;" onclick="triggerAnomaly()">
+            <span>⚠️</span> 이상주행
+          </button>
+        </div>
+      </div>
+
+      <!-- 카프카 분산 큐 모니터 -->
+      <div class="glass-card" style="flex:1; display:flex; flex-direction:column;">
+        <div class="card-title">
+          <span>⚡ Apache Kafka 토픽 실시간 브로커</span>
+          <span class="card-tag">smartcar-status (P:3)</span>
+        </div>
+        <div style="font-size:10px; color:var(--text-muted); margin-bottom:6px;">
+          수신 이벤트: <b id="totalEvents" style="color:var(--neon-cyan);">0</b> 건 | 처리량: <b style="color:var(--neon-emerald);">10 EPS</b>
+        </div>
+        <div class="stream-console" id="streamConsole">
+          <!-- 실시간 패킷 출력 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- [중앙 2단] 서울 도심 디지털 트윈 3D 맵 & HDFS 스토리지 -->
+    <div class="col" style="flex:1;">
+      <div class="glass-card map-container">
+        <canvas id="cityCanvas"></canvas>
+
+        <div class="map-overlay">
+          <div class="kpi-deck">
+            <div class="kpi-card">
+              <div class="val" id="kpiActiveCars">10대</div>
+              <div class="lbl">관제 중인 자율주행차</div>
+            </div>
+            <div class="kpi-card">
+              <div class="val" id="kpiAvgSpeed">72.4 km/h</div>
+              <div class="lbl">플릿 평균 주행 속도</div>
+            </div>
+            <div class="kpi-card">
+              <div class="val" id="kpiMaxSpeed">95.0 km/h</div>
+              <div class="lbl">최고 시속 (서울 간선)</div>
+            </div>
+          </div>
+
+          <div class="warning-banner" id="warningBanner">
+            <span>🚨</span> [위험 경고] CAR-003 과속 위험 주행 감지 (108km/h)
+          </div>
+        </div>
+      </div>
+
+      <!-- HDFS 128MB 블록 분할 및 복제 현황 -->
+      <div class="glass-card">
+        <div class="card-title">
+          <span>📦 Hadoop HDFS 분산 파일시스템 적재</span>
+          <span class="card-tag">Block Size: 128MB | Rep: 3</span>
+        </div>
+        <div class="hdfs-visualizer">
+          <div class="hdfs-node">
+            <div class="hdfs-node-title">DataNode-01 (렉 A)</div>
+            <div class="block-bar"><div class="block-chunk" id="dn1Chunk" style="width: 45%;"></div></div>
+            <div style="font-size:9px; color:#64748b; margin-top:2px;">블록 1, 2 보관 중</div>
+          </div>
+          <div class="hdfs-node">
+            <div class="hdfs-node-title">DataNode-02 (렉 B)</div>
+            <div class="block-bar"><div class="block-chunk" id="dn2Chunk" style="width: 45%;"></div></div>
+            <div style="font-size:9px; color:#64748b; margin-top:2px;">블록 2, 3 복제본</div>
+          </div>
+          <div class="hdfs-node">
+            <div class="hdfs-node-title">DataNode-03 (렉 C)</div>
+            <div class="block-bar"><div class="block-chunk" id="dn3Chunk" style="width: 45%;"></div></div>
+            <div style="font-size:9px; color:#64748b; margin-top:2px;">블록 1, 3 복제본</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- [우측 3단] Hive SQL 쿼리 탐색 & AI 딥러닝 두뇌 연구소 -->
+    <div class="col">
+      <!-- HiveServer2 SQL 인터랙티브 콘솔 -->
+      <div class="glass-card">
+        <div class="card-title">
+          <span>🏛️ Apache HiveServer2 SQL 콘솔</span>
+          <span class="card-tag">포트 10000 NOSASL</span>
+        </div>
+        <div class="sql-console">
+          <textarea class="sql-input" id="sqlQuery">SELECT car_id, avg(speed) as avg_spd, max(rpm) as max_rpm FROM smartcar_logs GROUP BY car_id LIMIT 5;</textarea>
+        </div>
+        <button class="btn-run-sql" onclick="runHiveQuery()">
+          <span>⚡</span> HiveQL 쿼리 실행하기 (Execute)
+        </button>
+
+        <table class="query-result-table" id="sqlTable">
+          <thead>
+            <tr><th>car_id</th><th>avg_spd</th><th>max_rpm</th><th>위험등급</th></tr>
+          </thead>
+          <tbody id="sqlTbody">
+            <tr><td>CAR-001</td><td>68.4 km/h</td><td>2,450</td><td><span style="color:var(--neon-emerald);">정상</span></td></tr>
+            <tr><td>CAR-002</td><td>74.1 km/h</td><td>2,680</td><td><span style="color:var(--neon-emerald);">정상</span></td></tr>
+            <tr><td>CAR-003</td><td>98.5 km/h</td><td>3,520</td><td><span style="color:var(--neon-rose);">과속</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- AI 머신러닝 회귀 & 딥러닝 분류기 -->
+      <div class="glass-card" style="flex:1;">
+        <div class="card-title">
+          <span>🧠 실시간 AI 머신러닝 & 딥러닝 추론</span>
+          <span class="card-tag">Keras DNN + OLS</span>
+        </div>
+
+        <div class="ai-predict-box">
+          <!-- 모델 1: 회귀 소득 예측 -->
+          <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:8px;">
+            <div style="font-size:11px; font-weight:700; color:var(--neon-cyan); margin-bottom:4px;">
+              [AI 1] 차량 배기량 기반 소득 예측 (Statsmodels)
+            </div>
+            <div class="slider-row">
+              <span>배기량 조절: <b id="ccVal" style="color:var(--neon-gold);">3,000 cc</b></span>
+              <input type="range" id="ccSlider" min="1500" max="5000" step="500" value="3000" oninput="predictIncome(this.value)">
+            </div>
+            <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">
+              예상 연소득: <b id="incomePred" style="color:var(--neon-emerald); font-size:13px;">4,420 만원</b> <span style="font-size:9px; color:#64748b;">(R²=0.74, p<0.001)</span>
+            </div>
+          </div>
+
+          <!-- 모델 2: 딥러닝 사고 패턴 분류 -->
+          <div style="background:rgba(0,0,0,0.3); padding:8px; border-radius:8px;">
+            <div style="font-size:11px; font-weight:700; color:var(--neon-purple); margin-bottom:4px;">
+              [AI 2] 10대 센서 기반 주행 사고 충돌 부위 예측 (TensorFlow)
+            </div>
+            <div style="font-size:10px; color:#94a3b8;">
+              입력: 시속 <b id="aiSpd">75km/h</b> | 조향각 <b id="aiSteer">-2.4°</b> | 도로: 교차로
+            </div>
+
+            <div class="prediction-bars">
+              <div class="prob-row">
+                <span style="width:70px;">전방 충돌:</span>
+                <div class="prob-track"><div class="prob-fill front" id="pFront" style="width: 72%;"></div></div>
+                <span id="txtFront" style="width:30px; text-align:right; font-weight:700;">72%</span>
+              </div>
+              <div class="prob-row">
+                <span style="width:70px;">측면 충돌:</span>
+                <div class="prob-track"><div class="prob-fill side" id="pSide" style="width: 18%;"></div></div>
+                <span id="txtSide" style="width:30px; text-align:right;">18%</span>
+              </div>
+              <div class="prob-row">
+                <span style="width:70px;">후방 추돌:</span>
+                <div class="prob-track"><div class="prob-fill rear" id="pRear" style="width: 10%;"></div></div>
+                <span id="txtRear" style="width:30px; text-align:right;">10%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 3. 최초 진입 자동 온보딩 팝업 모달 (Rule 14 표준 100% 준수) -->
+  <div class="modal-overlay" id="onboardingModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>🚗</span>
+          <span>자율주행 AI 빅데이터 레이크하우스 시뮬레이터 안내</span>
+        </div>
+        <button class="close-x" onclick="closeModal()">✕</button>
+      </div>
+
+      <div class="modal-section">
+        <h4>🎯 시뮬레이터 핵심 목적과 원리</h4>
+        <p>본 인터랙티브 시뮬레이터는 도서 <b>《자율주행 AI 자동차 빅데이터 레이크하우스 실무 가이드》</b>의 8대 핵심 시스템(센서 시뮬레이션 ➔ 카프카 스트리밍 ➔ HDFS 분산 적재 ➔ Hive SQL 탐색 ➔ AI 사고 예측)을 브라우저에서 설치 없이 1초 만에 직접 만져보고 검증할 수 있도록 제작되었습니다.</p>
+      </div>
+
+      <div class="modal-section">
+        <h4>🚀 3단계 초간단 실습 가이드</h4>
+        <div class="step-box">
+          <div><b>1. 프리셋 클릭</b>: 상단의 [🚦 도심 순항], [⚡ 고속도로 과속], [🚨 긴급 제동]을 클릭하여 자율주행 물리 상태를 실시간 변경하세요.</div>
+          <div><b>2. HDFS & Hive 체험</b>: 중앙의 HDFS 블록 3벌 복제 상태와 우측 HiveQL [실행하기] 버튼을 눌러 SQL 조회 과정을 관찰하세요.</div>
+          <div><b>3. AI 두뇌 연구소</b>: 우측 하단 배기량 슬라이더를 조절해 소득 회귀분석 및 딥러닝 3-Class 충돌 확률 추론을 실시간으로 확인하세요.</div>
+        </div>
+      </div>
+
+      <div class="modal-section">
+        <h4>🧭 주요 제어 버튼 기능 요약</h4>
+        <ul style="padding-left: 20px; font-size:12px; color:#94a3b8;">
+          <li><b>차량 번호(CAR-001~010)</b>: 특정 차량의 상세 센서 게이지 집중 관제</li>
+          <li><b>⚠️ 이상주행 버튼</b>: 강제로 시속 110km 과속 및 급조향을 유발하여 시스템 위험 경보 트리거</li>
+          <li><b>HiveQL 쿼리 실행</b>: 하둡 웨어하우스 분산 데이터 집계 및 위험 등급 실시간 분류</li>
+        </ul>
+      </div>
+
+      <div class="modal-footer">
+        <label class="no-show-label">
+          <input type="checkbox" id="chkNoShow"> 오늘 하루 이 안내 보지 않기
+        </label>
+        <button class="start-btn" onclick="confirmStart()">
+          🚀 시뮬레이터 실습 시작하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 토스트 피드백 알림 엘리먼트 -->
+  <div class="toast" id="toastMsg">알림 메시지</div>
+
+  <!-- 4. 자바스크립트 엔진 -->
+  <script>
+    // 10대 가상 자율주행차 초기 상태
+    const CARS = Array.from({length: 10}, (_, i) => {
+      const id = `CAR-${String(i+1).padStart(3, '0')}`;
+      return {
+        id: id,
+        x: 100 + (i % 5) * 80 + Math.random() * 20,
+        y: 80 + Math.floor(i / 5) * 120 + Math.random() * 20,
+        vx: (Math.random() * 1.5 + 0.8) * (Math.random() < 0.5 ? 1 : -1),
+        vy: (Math.random() * 1.5 + 0.8) * (Math.random() < 0.5 ? 1 : -1),
+        speed: 60 + Math.random() * 25,
+        rpm: 2000 + Math.floor(Math.random() * 600),
+        steer: (Math.random() * 6 - 3).toFixed(1),
+        brake: false,
+        color: i === 0 ? '#00f2fe' : (i === 2 ? '#f43f5e' : '#38bdf8'),
+        path: []
+      };
+    });
+
+    let selectedCarIndex = 0;
+    let isAutoDrive = true;
+    let totalEventsCount = 0;
+    let currentPreset = 'normal';
+
+    // 토스트 팝업 헬퍼 (Zero-Dead-Click 원칙)
+    function showToast(msg) {
+      const t = document.getElementById('toastMsg');
+      t.innerText = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    // 모달 제어 (localStorage 연동)
+    function openModal() {
+      document.getElementById('onboardingModal').classList.add('open');
+    }
+    function closeModal() {
+      document.getElementById('onboardingModal').classList.remove('open');
+    }
+    function confirmStart() {
+      if (document.getElementById('chkNoShow').checked) {
+        localStorage.setItem('dmdg_sim_smartcar_noshow', new Date().toDateString());
+      }
+      closeModal();
+      showToast('🚀 자율주행 빅데이터 레이크하우스 시뮬레이터가 활성화되었습니다!');
+    }
+
+    // 페이지 진입 시 온보딩 검사
+    window.addEventListener('DOMContentLoaded', () => {
+      initCarButtons();
+      initCanvas();
+      const savedDate = localStorage.getItem('dmdg_sim_smartcar_noshow');
+      if (savedDate !== new Date().toDateString()) {
+        openModal();
+      }
+      setInterval(simulationTick, 1000);
+      requestAnimationFrame(renderLoop);
+    });
+
+    // 차량 선택 버튼 렌더링
+    function initCarButtons() {
+      const cont = document.getElementById('carSelector');
+      cont.innerHTML = '';
+      CARS.forEach((c, idx) => {
+        const btn = document.createElement('button');
+        btn.className = `car-btn ${idx === selectedCarIndex ? 'active' : ''}`;
+        btn.innerText = c.id;
+        btn.onclick = () => selectCar(idx, btn);
+        cont.appendChild(btn);
+      });
+    }
+
+    function selectCar(idx, btnElem) {
+      selectedCarIndex = idx;
+      document.querySelectorAll('.car-btn').forEach(b => b.classList.remove('active'));
+      btnElem.classList.add('active');
+      updateGauges();
+      showToast(`🎯 관제 대상이 [${CARS[idx].id}]로 전환되었습니다.`);
+    }
+
+    // 일시정지 토글
+    function toggleAutoDrive() {
+      isAutoDrive = !isAutoDrive;
+      document.getElementById('autoDriveIcon').innerText = isAutoDrive ? '⏸️' : '▶️';
+      document.getElementById('autoDriveTxt').innerText = isAutoDrive ? '시뮬레이션 일시정지' : '시뮬레이션 재개';
+      showToast(isAutoDrive ? '▶️ 센서 시뮬레이션이 재개되었습니다.' : '⏸️ 센서 시뮬레이션이 일시정지되었습니다.');
+    }
+
+    // 프리셋 적용
+    function applyPreset(preset, btnElem) {
+      currentPreset = preset;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      if (btnElem) btnElem.classList.add('active');
+
+      if (preset === 'normal') {
+        CARS.forEach(c => { c.speed = 60 + Math.random() * 20; c.rpm = 2200; c.brake = false; });
+        showToast('🚦 도심 순항 프리셋: 정속 주행 및 정상 텔레메트리 스트림');
+      } else if (preset === 'highway') {
+        CARS.forEach(c => { c.speed = 95 + Math.random() * 25; c.rpm = 3400; c.brake = false; });
+        showToast('⚡ 고속도로 과속 프리셋: 전 차량 고속 모드 (시속 100km+ 돌파)');
+      } else if (preset === 'rainy') {
+        CARS.forEach(c => { c.speed = 45 + Math.random() * 15; c.rpm = 1800; c.steer = (Math.random()*8-4).toFixed(1); });
+        showToast('🌧️ 악천후 야간 프리셋: 노면 미끄러짐 및 속도 감속 모드');
+      } else if (preset === 'incident') {
+        triggerAnomaly();
+      }
+      updateGauges();
+    }
+
+    // 이상주행 트리거
+    function triggerAnomaly() {
+      const target = CARS[selectedCarIndex];
+      target.speed = 112.5;
+      target.rpm = 4200;
+      target.steer = -14.8;
+      target.brake = true;
+      updateGauges();
+
+      const banner = document.getElementById('warningBanner');
+      banner.style.display = 'flex';
+      banner.innerHTML = `<span>🚨</span> [위험 경고] ${target.id} 시속 ${target.speed}km/h 급조향 및 긴급 제동 발생!`;
+      setTimeout(() => { banner.style.display = 'none'; }, 4000);
+
+      showToast(`⚠️ [${target.id}] 긴급 회피 및 과속 경보가 카프카 브로커에 전송되었습니다!`);
+    }
+
+    // 게이지 업데이트
+    function updateGauges() {
+      const c = CARS[selectedCarIndex];
+      document.getElementById('valSpeed').innerHTML = `${c.speed.toFixed(1)} <span style="font-size:11px;font-weight:400;">km/h</span>`;
+      document.getElementById('valRpm').innerText = c.rpm.toLocaleString();
+      document.getElementById('valSteer').innerText = `${c.steer}°`;
+      
+      const bElem = document.getElementById('valBrake');
+      if (c.brake) {
+        bElem.innerText = 'ON (85%)';
+        bElem.style.color = 'var(--neon-rose)';
+      } else {
+        bElem.innerText = 'OFF (0%)';
+        bElem.style.color = 'var(--neon-emerald)';
+      }
+
+      // 우측 AI 입력값 연동
+      document.getElementById('aiSpd').innerText = `${c.speed.toFixed(0)}km/h`;
+      document.getElementById('aiSteer').innerText = `${c.steer}°`;
+      updateAiPredictions(c.speed, parseFloat(c.steer));
+    }
+
+    // 1초 단위 시뮬레이션 틱
+    function simulationTick() {
+      if (!isAutoDrive) return;
+
+      totalEventsCount += 10;
+      document.getElementById('totalEvents').innerText = totalEventsCount.toLocaleString();
+
+      // 차량 속도 및 RPM 미세 물리 변동
+      let totalSpd = 0;
+      let maxSpd = 0;
+      let overSpeedCars = 0;
+
+      CARS.forEach(c => {
+        const delta = (Math.random() - 0.5) * 4;
+        c.speed = Math.max(30, Math.min(130, c.speed + delta));
+        c.rpm = Math.floor(c.speed * 32 + (Math.random() * 150 - 75));
+        c.steer = ((Math.random() - 0.5) * 6).toFixed(1);
+        c.brake = c.speed > 90 && Math.random() < 0.2;
+
+        totalSpd += c.speed;
+        if (c.speed > maxSpd) maxSpd = c.speed;
+        if (c.speed > 100) overSpeedCars++;
+      });
+
+      // KPI 카드 갱신
+      document.getElementById('kpiAvgSpeed').innerText = `${(totalSpd / CARS.length).toFixed(1)} km/h`;
+      document.getElementById('kpiMaxSpeed').innerText = `${maxSpd.toFixed(1)} km/h`;
+
+      // 과속 경고 배너
+      const banner = document.getElementById('warningBanner');
+      if (overSpeedCars > 0) {
+        banner.style.display = 'flex';
+        banner.innerHTML = `<span>🚨</span> [위험 경고] 규정 속도 100km/h 초과 차량 ${overSpeedCars}대 감지! (플릿 원격 점검)`;
+      } else {
+        banner.style.display = 'none';
+      }
+
+      updateGauges();
+      appendKafkaLog();
+
+      // HDFS 블록 크기 시각화 점진적 증가
+      const pct = Math.min(95, 30 + (totalEventsCount % 100));
+      document.getElementById('dn1Chunk').style.width = `${pct}%`;
+      document.getElementById('dn2Chunk').style.width = `${pct}%`;
+      document.getElementById('dn3Chunk').style.width = `${pct}%`;
+    }
+
+    // 카프카 콘솔 로그 추가
+    function appendKafkaLog() {
+      const consoleElem = document.getElementById('streamConsole');
+      const c = CARS[selectedCarIndex];
+      const now = new Date().toTimeString().split(' ')[0];
+      const partition = (selectedCarIndex % 3);
+      const line = document.createElement('div');
+      line.className = 'stream-line';
+      line.innerHTML = `<span class="stream-time">[${now}]</span> <span class="stream-topic">smartcar-status#${partition}</span> <span class="stream-car">${c.id}</span> spd:${c.speed.toFixed(1)} rpm:${c.rpm} str:${c.steer}°`;
+      consoleElem.appendChild(line);
+      if (consoleElem.childNodes.length > 25) {
+        consoleElem.removeChild(consoleElem.firstChild);
+      }
+      consoleElem.scrollTop = consoleElem.scrollHeight;
+    }
+
+    // 캔버스 지도 렌더링
+    let canvas, ctx;
+    function initCanvas() {
+      canvas = document.getElementById('cityCanvas');
+      ctx = canvas.getContext('2d');
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+    }
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+
+    function renderLoop() {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 도로 그리드 배경
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
+      ctx.lineWidth = 1;
+      const step = 40;
+      for (let x = 0; x < canvas.width; x += step) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += step) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      // 서울 주요 간선 고속도로 선 (올림픽대로, 강남대로, 테헤란로)
+      ctx.strokeStyle = 'rgba(0, 242, 254, 0.25)';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(40, canvas.height * 0.3);
+      ctx.bezierCurveTo(canvas.width * 0.4, canvas.height * 0.2, canvas.width * 0.6, canvas.height * 0.5, canvas.width - 40, canvas.height * 0.4);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.25)';
+      ctx.beginPath();
+      ctx.moveTo(canvas.width * 0.3, 40);
+      ctx.lineTo(canvas.width * 0.45, canvas.height - 40);
+      ctx.stroke();
+
+      // 랜드마크 라벨
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px sans-serif';
+      ctx.fillText('🏢 강남 센트럴', canvas.width * 0.38, canvas.height * 0.42);
+      ctx.fillText('🌉 올림픽대로 (고속)', canvas.width * 0.15, canvas.height * 0.26);
+      ctx.fillText('🏛️ 여의도 금융로', canvas.width * 0.65, canvas.height * 0.38);
+
+      // 10대 차량 위치 이동 및 렌더링
+      CARS.forEach((c, idx) => {
+        if (isAutoDrive) {
+          c.x += c.vx;
+          c.y += c.vy;
+
+          if (c.x < 30 || c.x > canvas.width - 30) c.vx *= -1;
+          if (c.y < 30 || c.y > canvas.height - 30) c.vy *= -1;
+
+          c.path.push({x: c.x, y: c.y});
+          if (c.path.length > 20) c.path.shift();
+        }
+
+        // 주행 궤적 네온 선 (PathLayer 흉내)
+        if (c.path.length > 1) {
+          ctx.strokeStyle = idx === selectedCarIndex ? 'rgba(0, 242, 254, 0.7)' : 'rgba(56, 189, 248, 0.25)';
+          ctx.lineWidth = idx === selectedCarIndex ? 3 : 1.5;
+          ctx.beginPath();
+          ctx.moveTo(c.path[0].x, c.path[0].y);
+          for (let p of c.path) ctx.lineTo(p.x, p.y);
+          ctx.stroke();
+        }
+
+        // 차량 원형 마커
+        ctx.fillStyle = idx === selectedCarIndex ? '#00f2fe' : (c.speed > 100 ? '#f43f5e' : '#38bdf8');
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = idx === selectedCarIndex ? 15 : 6;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, idx === selectedCarIndex ? 7 : 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // 차량 라벨
+        ctx.fillStyle = idx === selectedCarIndex ? '#ffffff' : '#94a3b8';
+        ctx.font = '9px monospace';
+        ctx.fillText(c.id, c.x + 8, c.y + 3);
+      });
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    // Hive SQL 인터랙티브 실행
+    function runHiveQuery() {
+      showToast('⏳ HiveServer2 (포트 10000) 분산 맵리듀스 쿼리 실행 중...');
+      const tbody = document.getElementById('sqlTbody');
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--neon-cyan);">HDFS 분산 블록 스캔 및 맵리듀스 연산 진행 중... (100%)</td></tr>';
+
+      setTimeout(() => {
+        tbody.innerHTML = '';
+        CARS.slice(0, 5).forEach(c => {
+          const row = document.createElement('tr');
+          const isDanger = c.speed > 95;
+          row.innerHTML = `
+            <td><b>${c.id}</b></td>
+            <td>${c.speed.toFixed(1)} km/h</td>
+            <td>${c.rpm.toLocaleString()}</td>
+            <td><span style="color:${isDanger ? 'var(--neon-rose)' : 'var(--neon-emerald)'}; font-weight:700;">${isDanger ? '과속위험' : '안전순항'}</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+        showToast('✅ HiveQL 집계 쿼리가 0.42초 만에 완료되었습니다!');
+      }, 600);
+    }
+
+    // AI 소득 회귀 모델링 예측 함수
+    function predictIncome(cc) {
+      document.getElementById('ccVal').innerText = `${parseInt(cc).toLocaleString()} cc`;
+      // OLS 공식: Y = 1200 + 0.95*cc + noise
+      const pred = Math.round(1200 + (cc * 0.98) + (Math.random() * 80 - 40));
+      document.getElementById('incomePred').innerText = `${pred.toLocaleString()} 만원`;
+    }
+
+    // AI 주행 사고 딥러닝 예측 함수
+    function updateAiPredictions(speed, steer) {
+      let pFront = 40;
+      let pSide = 35;
+      let pRear = 25;
+
+      if (speed > 90) {
+        pFront += 35;
+        pRear -= 15;
+        pSide -= 20;
+      } else if (Math.abs(steer) > 8) {
+        pSide += 40;
+        pFront -= 25;
+        pRear -= 15;
+      }
+
+      // 합계 100% 정규화 (Softmax 흉내)
+      const sum = pFront + pSide + pRear;
+      const fNorm = Math.round((pFront / sum) * 100);
+      const sNorm = Math.round((pSide / sum) * 100);
+      const rNorm = 100 - fNorm - sNorm;
+
+      document.getElementById('pFront').style.width = `${fNorm}%`;
+      document.getElementById('txtFront').innerText = `${fNorm}%`;
+
+      document.getElementById('pSide').style.width = `${sNorm}%`;
+      document.getElementById('txtSide').innerText = `${sNorm}%`;
+
+      document.getElementById('pRear').style.width = `${rNorm}%`;
+      document.getElementById('txtRear').innerText = `${rNorm}%`;
+    }
+  </script>
+</body>
+</html>
